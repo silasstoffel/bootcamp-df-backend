@@ -3,36 +3,39 @@ import { parse, isBefore } from 'date-fns';
 import Meetup from '../models/Meetup';
 import User from '../models/User';
 
-const validateSchema = async (model, action = 'create') => {
-    const create = {
-        title: Yup.string().required(),
-        description: Yup.string().required(),
-        date: Yup.date().required(),
-        hour: Yup.string().required(),
-        user_id: Yup.number(),
-        file_id: Yup.number().required(),
-    };
-    let update = {};
-    if (action === 'update') {
-        update = {
-            id: Yup.number()
-                .min(1)
-                .required(),
-        };
-    }
-    const m = { ...create, ...update };
-    const schema = Yup.object().shape(m);
-    const check = await schema.isValid(model);
-    return check;
-};
-
 class MeetupController {
     async store(req, res) {
-        if (!(await validateSchema(req.body))) {
-            return res
-                .status(400)
-                .json({ error: true, message: 'Schema inválido' });
+        const schema = Yup.object().shape({
+            title: Yup.string()
+                .nullable()
+                .min(1, 'Titulo é obrigatório')
+                .required('Titulo é obrigatório'),
+            description: Yup.string()
+                .nullable()
+                .required(1, 'Descrição é obrigatório')
+                .required('Descrição é obrigatório'),
+            date: Yup.date()
+                .min(1, 'Data é obrigatório')
+                .required('Data é obrigatório'),
+            hour: Yup.string()
+                .min(1, 'Hora é obrigatório')
+                .required('Hora é obrigatório'),
+            user_id: Yup.number().nullable(),
+            file_id: Yup.number()
+                .nullable()
+                .min(1, 'Banner é obrigatório')
+                .required('Banner é obrigatório'),
+        });
+
+        try {
+            await schema.validateSync(req.body);
+        } catch (error) {
+            return res.status(400).json({
+                error: true,
+                message: error.message,
+            });
         }
+
         // Não deve ser possível cadastrar meetups com datas que já passaram.
         // https://blog.rocketseat.com.br/datas-e-horarios-javascript-date-fns-moment/
         if (isBefore(parse(req.body.date), new Date())) {
@@ -49,10 +52,42 @@ class MeetupController {
     }
 
     async update(req, res) {
-        if (!(await validateSchema(req.body, 'update'))) {
-            return res
-                .status(400)
-                .json({ error: true, message: 'Schema inválido' });
+        const schema = Yup.object().shape({
+            id: Yup.number()
+                .nullable()
+                .min(1, 'ID é obrigatório')
+                .required('ID é obrigatório'),
+            title: Yup.string()
+                .nullable()
+                .min(1, 'Titulo é obrigatório')
+                .required('Titulo é obrigatório'),
+            description: Yup.string()
+                .nullable()
+                .required('Descrição é obrigatório'),
+            date: Yup.date()
+                .nullable()
+                .min(1, 'Data é obrigatório')
+                .required('Data é obrigatório'),
+            hour: Yup.string()
+                .nullable()
+                .min(1, 'Hora é obrigatório')
+                .required('Hora é obrigatório'),
+            user_id: Yup.number()
+                .nullable()
+                .required('Usuário é obrigatório'),
+            file_id: Yup.number()
+                .nullable()
+                .min(1, 'Banner é obrigatório')
+                .required('Banner é obrigatório'),
+        });
+
+        try {
+            await schema.validateSync(req.body);
+        } catch (error) {
+            return res.status(400).json({
+                error: true,
+                message: error.message,
+            });
         }
         const { id } = req.body;
         const meetup = await Meetup.findByPk(id);

@@ -1,8 +1,28 @@
 import jwt from 'jsonwebtoken';
+import * as Yup from 'yup';
 import User from '../models/User';
 
 class SessionController {
     async store(req, res) {
+        const schema = Yup.object().shape({
+            email: Yup.string()
+                .nullable()
+                .email('Informe um e-mail válido')
+                .required('E-mail é obrigatório'),
+            name: Yup.string()
+                .nullable()
+                .required('Nome é obrigatório'),
+        });
+
+        try {
+            await schema.validateSync(req.body);
+        } catch (error) {
+            return res.status(400).json({
+                error: true,
+                message: error.message,
+            });
+        }
+
         const { email, password } = req.body;
         const user = await User.findOne({ where: { email } });
         if (!user) {

@@ -9,7 +9,9 @@ import Subscription from '../models/Subscription';
 const validateSchema = async model => {
     const schema = Yup.object().shape({
         user_id: Yup.number().nullable(),
-        meetup_id: Yup.number().required(),
+        meetup_id: Yup.number()
+            .min(1, 'Meetup é obrigatório')
+            .required('Meetup é obrigatório'),
     });
     const check = await schema.isValid(model);
     return check;
@@ -17,10 +19,19 @@ const validateSchema = async model => {
 
 class SubscriptionController {
     async store(req, res) {
-        if (!(await validateSchema(req.body))) {
-            return res
-                .status(400)
-                .json({ error: true, message: 'Schema inválido' });
+        const schema = Yup.object().shape({
+            meetup_id: Yup.number()
+                .min(1, 'Meetup é obrigatório')
+                .required('Meetup é obrigatório'),
+        });
+
+        try {
+            await schema.validateSync(req.body);
+        } catch (error) {
+            return res.status(400).json({
+                error: true,
+                message: error.message,
+            });
         }
 
         const meetup = await Meetup.findByPk(req.body.meetup_id);
@@ -121,11 +132,23 @@ class SubscriptionController {
     }
 
     async update(req, res) {
-        if (!(await validateSchema(req.body, 'update'))) {
-            return res
-                .status(400)
-                .json({ error: true, message: 'Schema inválido' });
+        const schema = Yup.object().shape({
+            user_id: Yup.number()
+                .min(1, 'Usuário é obrigatório')
+                .required('Usuário é obrigatório'),
+            meetup_id: Yup.number()
+                .min(1, 'Meetup é obrigatório')
+                .required('Meetup é obrigatório'),
+        });
+        try {
+            await schema.validateSync(req.body);
+        } catch (error) {
+            return res.status(400).json({
+                error: true,
+                message: error.message,
+            });
         }
+
         const { id } = req.body;
         const meetup = await Meetup.findByPk(id);
         if (!meetup) {
@@ -157,19 +180,27 @@ class SubscriptionController {
                 {
                     model: Meetup,
                     as: 'meetup',
-                    attributes: ['id', 'title', 'description', 'date', 'hour', 'file_id', 'address'],
+                    attributes: [
+                        'id',
+                        'title',
+                        'description',
+                        'date',
+                        'hour',
+                        'file_id',
+                        'address',
+                    ],
                     where: {
                         date: { [Op.gte]: hoje },
                     },
                     required: true,
-					include: [
-						{
-							model: User,
-							as: 'user',
-							attributes: ['id', 'name', 'email'],
-							required: true,
-						}
-					]
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: ['id', 'name', 'email'],
+                            required: true,
+                        },
+                    ],
                 },
             ],
 
@@ -197,7 +228,7 @@ class SubscriptionController {
 
         try {
             await subscription.destroy();
-            return res.json({error: false, message: 'Excluído com sucesso'});
+            return res.json({ error: false, message: 'Excluído com sucesso' });
         } catch (error) {
             return res.status(400).json({
                 error: true,
