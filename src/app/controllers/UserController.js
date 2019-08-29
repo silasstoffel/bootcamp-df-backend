@@ -58,7 +58,10 @@ class UserController {
                     password
                         ? field
                               .required('Confirmação da senha é obrigatória')
-                              .oneOf([Yup.ref('password')])
+                              .oneOf(
+                                  [Yup.ref('password')],
+                                  'A confirmação da senha não é válida'
+                              )
                         : field
                 ),
         });
