@@ -4,20 +4,26 @@ import User from '../models/User';
 class UserController {
     async store(req, res) {
         const schema = Yup.object().shape({
-            name: Yup.string().required(),
+            name: Yup.string()
+                .nullable()
+                .required('Nome é obrigatório'),
             email: Yup.string()
-                .email()
-                .required(),
+                .nullable()
+                .email('Informe um e-mail válido')
+                .required('E-mail é obrigatório'),
             password: Yup.string()
-                .min(6)
-                .required(),
+                .nullable()
+                .min(6, 'Senha precisa ter no mínimo 6 caracteres')
+                .required('Senha é obrigatório'),
         });
 
-        // Valida o schema
-        if (!(await schema.isValid(req.body))) {
-            return res
-                .status(400)
-                .json({ error: true, message: 'Schema inválido' });
+        try {
+            await schema.validateSync(req.body);
+        } catch (error) {
+            return res.status(400).json({
+                error: true,
+                message: error.message,
+            });
         }
 
         const exists = await User.findOne({ where: { email: req.body.email } });
@@ -32,28 +38,38 @@ class UserController {
 
     async update(req, res) {
         const schema = Yup.object().shape({
-            name: Yup.string(),
-            email: Yup.string().email(),
+            name: Yup.string()
+                .nullable()
+                .required('Nome é obrigatório'),
+            email: Yup.string()
+                .email('Informe um e-mail válido')
+                .required('E-mail'),
             current_password: Yup.string().nullable(),
             password: Yup.string()
                 .nullable()
                 .when('current_password', (current_password, field) =>
-                    current_password ? field.required() : field
+                    current_password
+                        ? field.required('Senha atual é obrigatória')
+                        : field
                 ),
             confirm_password: Yup.string()
                 .nullable()
                 .when('password', (password, field) =>
                     password
-                        ? field.required().oneOf([Yup.ref('password')])
+                        ? field
+                              .required('Confirmação da senha é obrigatória')
+                              .oneOf([Yup.ref('password')])
                         : field
                 ),
         });
 
-        // Valida o schema
-        if (!(await schema.isValid(req.body))) {
-            return res
-                .status(400)
-                .json({ error: true, message: 'Schema inválido' });
+        try {
+            await schema.validateSync(req.body);
+        } catch (error) {
+            return res.status(400).json({
+                error: true,
+                message: error.message,
+            });
         }
 
         const { email, current_password } = req.body;
