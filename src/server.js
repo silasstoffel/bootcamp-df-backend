@@ -1,5 +1,6 @@
 import './config/dotEnvStart';
 import express from 'express';
+import cors from 'cors';
 import routes from './routes';
 import './database';
 
@@ -12,6 +13,7 @@ class Server {
     }
 
     middlewares() {
+        this.express.use(cors());
         this.express.use(express.json());
     }
 

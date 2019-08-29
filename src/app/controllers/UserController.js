@@ -15,12 +15,16 @@ class UserController {
 
         // Valida o schema
         if (!(await schema.isValid(req.body))) {
-            res.status(400).json({ error: true, message: 'Schema inválido' });
+            return res
+                .status(400)
+                .json({ error: true, message: 'Schema inválido' });
         }
 
         const exists = await User.findOne({ where: { email: req.body.email } });
         if (exists) {
-            res.status(400).json({ error: true, message: 'Usuario já existe' });
+            return res
+                .status(400)
+                .json({ error: true, message: 'Usuario já existe' });
         }
         const { id, email, name } = await User.create(req.body);
         return res.json({ id, email, name });
@@ -30,14 +34,14 @@ class UserController {
         const schema = Yup.object().shape({
             name: Yup.string(),
             email: Yup.string().email(),
-            current_password: Yup.string().min(6),
+            current_password: Yup.string().nullable(),
             password: Yup.string()
-                .min(6)
+                .nullable()
                 .when('current_password', (current_password, field) =>
                     current_password ? field.required() : field
                 ),
             confirm_password: Yup.string()
-                .min(6)
+                .nullable()
                 .when('password', (password, field) =>
                     password
                         ? field.required().oneOf([Yup.ref('password')])
@@ -47,7 +51,9 @@ class UserController {
 
         // Valida o schema
         if (!(await schema.isValid(req.body))) {
-            res.status(400).json({ error: true, message: 'Schema inválido' });
+            return res
+                .status(400)
+                .json({ error: true, message: 'Schema inválido' });
         }
 
         const { email, current_password } = req.body;
@@ -59,7 +65,7 @@ class UserController {
                 where: { email },
             });
             if (exists) {
-                res.status(400).json({
+                return res.status(400).json({
                     error: true,
                     message: 'Já existe um usuario com esse e-mail',
                 });
@@ -68,7 +74,7 @@ class UserController {
 
         // Senha antiga bate?
         if (current_password && !(await user.checkPassword(current_password))) {
-            res.status(401).json({
+            return res.status(401).json({
                 error: true,
                 message: 'Senha atual não é válida',
             });

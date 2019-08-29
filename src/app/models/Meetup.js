@@ -10,10 +10,22 @@ class Meetup extends Model {
                 hour: Sequelize.TIME,
                 user_id: Sequelize.INTEGER,
                 file_id: Sequelize.INTEGER,
+                address: Sequelize.STRING,
             },
             { sequelize }
         );
         return this;
+    }
+
+    static associate(models) {
+        this.belongsTo(models.User, {
+            foreignKey: 'user_id',
+            as: 'user',
+        });
+        this.belongsTo(models.File, {
+            foreignKey: 'file_id',
+            as: 'file',
+        });
     }
 }
 

@@ -84,7 +84,7 @@ class SubscriptionController {
                 return res.status(400).json({
                     error: true,
                     message:
-                        'Usuário já tem uma meetup agendado para mesmo horario da meetup a ser incrita!',
+                        'Já existe inscrição ativa em um meetup para mesmo horario da meetup a ser incrita!',
                 });
             }
         }
@@ -157,11 +157,19 @@ class SubscriptionController {
                 {
                     model: Meetup,
                     as: 'meetup',
-                    attributes: ['id', 'title', 'description', 'date', 'hour'],
+                    attributes: ['id', 'title', 'description', 'date', 'hour', 'file_id', 'address'],
                     where: {
                         date: { [Op.gte]: hoje },
                     },
                     required: true,
+					include: [
+						{
+							model: User,
+							as: 'user',
+							attributes: ['id', 'name', 'email'],
+							required: true,
+						}
+					]
                 },
             ],
 
@@ -172,32 +180,24 @@ class SubscriptionController {
 
     async delete(req, res) {
         const { id } = req.params;
-        const meetup = await Meetup.findByPk(id);
-        if (!meetup) {
+        const subscription = await Subscription.findByPk(id);
+        if (!subscription) {
             return res.status(400).json({
                 error: true,
-                message: 'Meetup não encontrada',
-            });
-        }
-        // O usuário deve poder cancelar meetups organizados por ele e que ainda não aconteceram.
-        // O cancelamento deve deletar o meetup da base de dados.
-        if (meetup.user_id !== req.userId) {
-            return res.status(400).json({
-                error: true,
-                message: 'Você pode excluir meetup de outro usuário',
+                message: 'Inscrição não encontrada',
             });
         }
 
-        if (isBefore(parse(meetup.date), new Date())) {
+        if (subscription.user_id !== req.userId) {
             return res.status(400).json({
                 error: true,
-                message: 'Meetup só pode ser excluida até a data programada',
+                message: 'Você não pode excluir inscrição de outro usuário',
             });
         }
 
         try {
-            await meetup.destroy();
-            return res.json({});
+            await subscription.destroy();
+            return res.json({error: false, message: 'Excluído com sucesso'});
         } catch (error) {
             return res.status(400).json({
                 error: true,

@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import { parse, isBefore } from 'date-fns';
 import Meetup from '../models/Meetup';
+import User from '../models/User';
 
 const validateSchema = async (model, action = 'create') => {
     const create = {
@@ -65,7 +66,14 @@ class MeetupController {
         if (meetup.user_id !== req.userId) {
             return res.status(400).json({
                 error: true,
-                message: 'Você pode editar meetups de outro usuário',
+                message: 'Você não pode editar meetups de outro usuário',
+            });
+        }
+
+        if (isBefore(parse(meetup.date), new Date())) {
+            return res.status(400).json({
+                error: true,
+                message: 'Meetup só pode ser alterada até a data programada',
             });
         }
 
@@ -77,9 +85,9 @@ class MeetupController {
         // Crie uma rota para listar os meetups com filtro por data (não por hora), os resultados dessa listagem devem
         // vir paginados em 10 itens por página. Abaixo tem um exemplo de chamada para a rota de listagem dos meetups:
         // http://localhost:3333/meetups?date=2019-07-01&page=2
-        const { page = 1, date } = req.query;
-        const limitResults = 2;
-        const where = { user_id: req.userId };
+        const { page = 1, date = '' } = req.query;
+        const limitResults = 10;
+        const where = {};
         if (date) {
             where.date = date;
         }
@@ -87,6 +95,30 @@ class MeetupController {
             where,
             limit: limitResults,
             offset: (page - 1) * limitResults,
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'name', 'email'],
+                    required: true,
+                },
+            ],
+        });
+        return res.json(meetups);
+    }
+
+    async meetupsUser(req, res) {
+        // Crie uma rota para listar os meetups que são organizados pelo usuário logado.
+        const meetups = await Meetup.findAll({
+            where: { user_id: req.userId },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'name', 'email'],
+                    required: true,
+                },
+            ],
         });
         return res.json(meetups);
     }
@@ -105,7 +137,7 @@ class MeetupController {
         if (meetup.user_id !== req.userId) {
             return res.status(400).json({
                 error: true,
-                message: 'Você pode excluir meetup de outro usuário',
+                message: 'Você não pode excluir meetup de outro usuário',
             });
         }
 
@@ -125,6 +157,18 @@ class MeetupController {
                 message: 'Erro ao excluir meetup',
             });
         }
+    }
+
+    async load(req, res) {
+        const { id } = req.params;
+        const meetup = await Meetup.findByPk(id);
+        if (!meetup) {
+            return res.status(400).json({
+                error: true,
+                message: 'Meetup não encontrada',
+            });
+        }
+        return res.json(meetup);
     }
 }
 

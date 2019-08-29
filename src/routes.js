@@ -20,6 +20,7 @@ const upload = multer(multerCfg);
  */
 routes.post('/sessions', SessionController.store);
 routes.post('/users', UserController.store);
+routes.get('/files/:id', FileController.show);
 
 /**
  * Abaixo são todas rotas necessária de autenticação
@@ -34,9 +35,11 @@ routes.post('/files', upload.single('file'), FileController.store);
 
 // Meetups
 routes.get('/meetups', Meetup.index);
+routes.get('/meetups/user', Meetup.meetupsUser);
 routes.post('/meetups', Meetup.store);
 routes.put('/meetups', Meetup.update);
 routes.delete('/meetups/:id', Meetup.delete);
+routes.get('/meetups/:id', Meetup.load);
 
 // Subscriptions
 routes.get('/subscriptions', Subscription.index);
