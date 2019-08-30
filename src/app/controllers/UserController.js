@@ -75,7 +75,7 @@ class UserController {
             });
         }
 
-        const { email, current_password } = req.body;
+        const { email, current_password, password } = req.body;
         const user = await User.findByPk(req.userId);
 
         // Se mudar o e-mail, verificar se o e-mail já existe
@@ -92,7 +92,7 @@ class UserController {
         }
 
         // Senha antiga bate?
-        if (current_password && !(await user.checkPassword(current_password))) {
+        if (password && !(await user.checkPassword(current_password))) {
             return res.status(401).json({
                 error: true,
                 message: 'Senha atual não é válida',

@@ -6,17 +6,6 @@ import Meetup from '../models/Meetup';
 import User from '../models/User';
 import Subscription from '../models/Subscription';
 
-const validateSchema = async model => {
-    const schema = Yup.object().shape({
-        user_id: Yup.number().nullable(),
-        meetup_id: Yup.number()
-            .min(1, 'Meetup é obrigatório')
-            .required('Meetup é obrigatório'),
-    });
-    const check = await schema.isValid(model);
-    return check;
-};
-
 class SubscriptionController {
     async store(req, res) {
         const schema = Yup.object().shape({
@@ -41,6 +30,16 @@ class SubscriptionController {
                 message: 'Meetup não encontrada',
             });
         }
+
+        // O usuário deve poder se inscrever em meetups que não organiza.
+        if (meetup.user_id === req.userId) {
+            return res.status(400).json({
+                error: true,
+                message:
+                    'Usuário é o organizador da meetup. Se inscreva apenas em um meetup em que não seja o organizador',
+            });
+        }
+
         // O usuário não pode se inscrever em meetups que já aconteceram..
         if (!isBefore(new Date(), parse(meetup.date))) {
             return res.status(400).json({
@@ -113,7 +112,7 @@ class SubscriptionController {
             const organizer = await User.findByPk(meetup.user_id);
 
             await Mail.send({
-                to: 'Silas Stoffel <silasstofel@gmail.com>',
+                to: `${organizer.name} <${organizer.email}>`,
                 subject: 'Meetup - Nova Inscrição',
                 template: 'subscription-meetup',
                 context: {

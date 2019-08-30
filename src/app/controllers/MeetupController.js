@@ -72,9 +72,7 @@ class MeetupController {
                 .nullable()
                 .min(1, 'Hora é obrigatório')
                 .required('Hora é obrigatório'),
-            user_id: Yup.number()
-                .nullable()
-                .required('Usuário é obrigatório'),
+            user_id: Yup.number().nullable(),
             file_id: Yup.number()
                 .nullable()
                 .min(1, 'Banner é obrigatório')

@@ -9,9 +9,9 @@ class SessionController {
                 .nullable()
                 .email('Informe um e-mail válido')
                 .required('E-mail é obrigatório'),
-            name: Yup.string()
+            password: Yup.string()
                 .nullable()
-                .required('Nome é obrigatório'),
+                .required('Senha é obrigatório'),
         });
 
         try {

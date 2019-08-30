@@ -7,11 +7,11 @@ class FileController {
         // req.file => nome que o multer coloca para acesso
         // às propriedades de upload
         const schema = Yup.object().shape({
-            path: Yup.string().required(
-                'propriedade/atributo path do arquivo de upload é obrigatório'
+            filename: Yup.string().required(
+                'propriedade/atributo filename do arquivo de upload é obrigatório'
             ),
-            name: Yup.string().required(
-                'propriedade/atributo name do arquivo de upload é obrigatório'
+            originalname: Yup.string().required(
+                'propriedade/atributo originalname do arquivo de upload é obrigatório'
             ),
         });
         try {
