@@ -1,5 +1,8 @@
 # Backend - Desafio Final Bootcamp
 
+## Instalação de depências
+Instalar às dependencias usando `yarn` ou `npm`
+
 ## Como rodar o projeto em desenvolvimento
 
 * Duplique o arquivo `.env.new`
