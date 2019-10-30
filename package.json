@@ -23,7 +23,7 @@
         "nodemailer-express-handlebars": "^3.1.0",
         "path": "^0.12.7",
         "require-dir": "^1.2.0",
-        "sequelize": "^5.12.3",
+        "sequelize": "^5.15.1",
         "sucrase": "^3.10.1",
         "yup": "^0.27.0"
     },
